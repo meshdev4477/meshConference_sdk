@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mesh-conference-test</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <h1>Mesh conference frontend test</h1>
+  <div id="form">
+    <label for="roomId">
+      RoomId: 
+      <input type="text" name="roomId" id="roomId">
+    </label>
+    <label for="displayName">
+      Name: 
+      <input type="text" name="displayName" id="displayName">
+    </label>
+    <button id="startConference">Start</button>
+    <button id="leaveConference" disabled>Leave</button>
+  </div>
+
+  <label for="resolutionList">
+    resolution: 
+    <select id="resolutionList" class='hide'>
+      <option value="verylow">verylow</option>
+      <option value="low">low</option>
+      <option value="medium" selected>medium</option>
+      <option value="high">high</option>
+      <option value="veryhigh">veryhigh</option>
+      <option value="ultra">ultra</option>
+    </select>
+  </label>
+  <br>
+  <label for="framerateList">
+    framerate: 
+    <select id="framerateList" class='hide'>
+      <option value="1">1</option>
+      <option value="5">5</option>
+      <option value="10">10</option>
+      <option value="15">15</option>
+      <option value="30" selected>30</option>
+      <option value="60">60</option>
+    </select>
+  </label>
+  <br>
+
+  <div>
+    <button id="shareScreenSwitch" disabled>Start screen share</button>
+  </div>
+  <div>
+    <button id="webcamSwitch" disabled>Hide video</button>
+    <button id="micSwitch" disabled>mute audio</button>
+  </div>
+
+  <div>
+    <div id="local-video-container">
+      <video id="video-local" width="50%" autoplay muted controls playsinline></video>
+      <div class="overlayText">
+        <p id="local-displayName"></p>
+      </div>
+    </div>
+    <audio id="audio-local" muted autoplay playsinline></audio>
+    <video id="screen-share-local" width="40%" autoplay muted playsinline></video>
+  </div>
+  <div id="videos">
+  </div>
+
+  <!-- <script>
+    window.localStorage.setItem('debug', '* -engine* -socket* -RIE* *WARN* *ERROR*');
+  </script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.1/socket.io.js" integrity="sha512-AcZyhRP/tbAEsXCCGlziPun5iFvcSUpEz2jKkx0blkYKbxU81F+iq8FURwPn1sYFeksJ+sDDrI5XujsqSobWdQ==" crossorigin="anonymous"></script>
+  <script src="./dist/index.sdk.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

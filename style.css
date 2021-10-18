@@ -1,0 +1,71 @@
+#local-video-container{
+  position:relative;
+  width:auto;
+}
+
+#local-video-container > .overlayText {
+  position:absolute;
+  top:25%;
+  width:50%;
+  text-align:center;
+  z-index:1;
+ }
+ 
+.overlayText > p{
+  color: white;
+  align-self: center;
+}
+
+#local-displayName {
+  font-size: 20px;
+  align-self: center;
+}
+
+.on {
+  background-color: yellowgreen;
+}
+
+.off {
+  background-color: violet;
+}
+
+
+.container{
+  position: relative;
+}
+
+.overlayText {
+  position:absolute;
+  top:25%;
+  width:40%;
+  text-align:center;
+  z-index:1;
+}
+
+.container>.remote-audio-buttons{
+  height: 30px;
+  left: 0%;
+  padding: -20px 0 0 -20px;
+  position: absolute;
+  top: 40%;
+  width: 100px;
+  z-index: 10; 
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.container>.remote-video-buttons{
+  height: 30px;
+  left: 0%;
+  padding: -20px 0 0 -20px;
+  position: absolute;
+  top: 60%;
+  width: 100px;
+  z-index: 10; 
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.hide {
+  display: none;
+}
