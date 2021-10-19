@@ -9,21 +9,22 @@
 <body>
   <h1>Mesh conference frontend test</h1>
   <div id="form">
-    <label for="roomId">
+    <label for="input-roomId">
       RoomId: 
-      <input type="text" name="roomId" id="roomId">
+      <input type="text" name="input-roomId" id="input-roomId">
     </label>
-    <label for="displayName">
+    <label for="input-displayName">
       Name: 
-      <input type="text" name="displayName" id="displayName">
+      <input type="text" name="input-displayName" id="input-displayName">
     </label>
-    <button id="startConference">Start</button>
-    <button id="leaveConference" disabled>Leave</button>
+    <button id="btn-createAndJoinRoom">createAndJoinRoom</button>
+    <button id="btn-joinRoom">JoinRoom</button>
+    <button id="btn-leaveConference" disabled>Leave</button>
   </div>
 
-  <label for="resolutionList">
+  <label for="select-resolutionList">
     resolution: 
-    <select id="resolutionList" class='hide'>
+    <select id="select-resolutionList" class='hide'>
       <option value="verylow">verylow</option>
       <option value="low">low</option>
       <option value="medium" selected>medium</option>
@@ -33,9 +34,9 @@
     </select>
   </label>
   <br>
-  <label for="framerateList">
+  <label for="select-framerateList">
     framerate: 
-    <select id="framerateList" class='hide'>
+    <select id="select-framerateList" class='hide'>
       <option value="1">1</option>
       <option value="5">5</option>
       <option value="10">10</option>
@@ -45,13 +46,29 @@
     </select>
   </label>
   <br>
-
+  <label for="select-audioInputDevices">
+    Audio Input Devices: 
+    <select id="select-audioInputDevices">
+    </select>
+  </label>
+  <br>
+  <label for="select-audioOutputDevices">
+    Audio Output Devices: 
+    <select id="select-audioOutputDevices">
+    </select>
+  </label>
+  <br>
+  <label for="select-webcamDevices">
+    Webcam Devices: 
+    <select id="select-webcamDevices">
+    </select>
+  </label>
   <div>
-    <button id="shareScreenSwitch" disabled>Start screen share</button>
+    <button id="btn-shareScreenSwitch" disabled>Share screen</button>
   </div>
   <div>
-    <button id="webcamSwitch" disabled>Hide video</button>
-    <button id="micSwitch" disabled>mute audio</button>
+    <button id="btn-webcamSwitch" disabled>Webcam</button>
+    <button id="btn-micSwitch" disabled>Mic</button>
   </div>
 
   <div>

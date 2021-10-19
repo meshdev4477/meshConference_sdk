@@ -64,6 +64,9 @@ async function getConferenceServer(jwtToken){
 In Mesh Conference SDK demo, auth token is retrieved by making API request from browser directly for simplicity.
 In a production deployment, to secure the login username/password, the auth token should be retrieved by making API request from a backend server, and passed from backend to browser.
 
+## how to check if the server works normally
+- GET https://[API_URL]/healthcheck
+
 ## sdk usage
 
 - Import sdk
@@ -89,6 +92,7 @@ const conference = new Conference(
   roomId,       // Enter the room name (user input)
   jwtToken,     // In order to access mesh-conference backend
   displayName   // Enter your name (user input)
+  create        // Decide if you want to create or join room
 );
 ```
 
@@ -112,7 +116,7 @@ await conference.handleTransport(true);
 - Join room
 
 ```javascript
-// JoinInfo returns all the datas about the room.
+// joinInfo returns all the datas about the room
 const joinInfo = await conference.join();
 console.log(joinInfo);
 ```
@@ -124,7 +128,7 @@ example joinInfo:
     "roles": [
         "normal"
     ],
-    "peers": [
+    "peers": [ // 不包括自己
         {
             "id": "2rg1o7qi",
             "displayName": "Guest",
@@ -220,6 +224,57 @@ example joinInfo:
 }
 ```
 
+- lock or unlockRoom
+
+```javascript
+await conference.lockRoom();
+await conference.unlockRoom();
+```
+
+- promotePeer (允許大廳的 peer 進入被鎖上的房間)
+
+```javascript
+await conference.promotePeer(peerId)
+```
+
+- promoteAllPeers (允許大廳的所有 peer 進入被鎖上的房間)
+
+```javascript
+await conference.promoteAllPeers()
+```
+
+- sendMessage
+
+```javascript
+const message = await conference.sendMessage(text)
+/*
+  data interface: (依目前的功能，應該只需要 name, text, time)
+
+  {
+    name, 
+    picture,
+    sender,
+    text,
+    time,
+    type
+  }
+*/
+```
+
+- raiseHand, putDownHand
+
+```javascript
+await conference.raiseHand();
+await conference.putDownHand();
+```
+
+- pinPeer, unpinPeer
+
+```javascript
+await conference.pinPeer(peerId);
+await conference.unpinPeer(peerId);
+```
+
 - produce your webcam and mic
 
 ```javascript
@@ -280,26 +335,247 @@ await conference.produce(webcamTrack, {
     });
     ```
 
-- wait for incoming events
+- listen to incoming events
 
 ```javascript
 conference
   .on('unauthorized', reason => {
     console.log("Unauthoized:", reason);
   })
-  .on('addtrack', ({track, displayName, peerId, source}) => {
-    addRemoteMedia(track, peerId, source);
+  .on('noDecision', err => {
+    /* 當 conference object 帶入的 create 不是 boolean 時 */
   })
-  .on('removetrack', ({track, displayName, peerId, source}) => {
-    removeRemoteMedia(track, peerId, source);
+  .on('create:duplicatedRoom', err => {
+    /* 當選擇 create room，但 roomId 已經被使用過 */
+  })
+  .on('join:roomNotExist', err => {
+    /* 當選擇 join room，但 room 並不存在 */
+  })
+  .on('disconnect', reason => {
+    /* 如果 reason 不是 "io server disconnect"，則會視為嘗試重新連接 */
+  })
+  .on('reconnect', () => {
+
+  })
+  .on('reconnect_failed', () => {
+    
+  })
+  .on('waitInLobby', () => {
+    alert('The room is locked. Wait in lobby');
+  })
+  .on('roomReady', () => {
+    /* 為了區隔掉 lobbyPeer，當觸發 roomReady event 時，peer 才會正式進入 room */
+    //...
+  })
+  .on('roomLocked', ({ peerId }) => {
+    console.log(`Room is locked by ${peerId}`);
+  })
+  .on('roomUnlocked', ({ peerId }) => {
+    console.log(`Room is unlocked by ${peerId}`);
+  })
+  .on('newLobbyPeer', ({ peerId, displayName }) => {
+    console.log("new lobby peer parked:", { peerId, displayName })
+  })
+  .on('lobbyPeerLeaved', ({ peerId }) => {
+    console.log("leaved lobby peer id:", peerId);
+  })
+  .on('approvedLobbyPeer', ({ peerId }) => {
+    console.log("approved lobby peer id:", peerId);
+  })
+  .on('peerChatMessage', ({ peerId, chatMessage }) => {
+    /*
+      data interface for chatMessage: (依目前的功能，應該只需要 name, text, time)
+
+      {
+        name: string, 
+        picture: string,
+        sender: string,
+        text: string,
+        time: date,
+        type: string
+      }
+    */
+  })
+  .on('peerRaisedHand', ({ peerId, raisedHandTimestamp }) => {
+    //...
+  })
+  .on('peerPutDownHand', ({ peerId }) => {
+    //...
+  })
+  .on('personalData', ({ peerId, displayName, roles }) => {
+    /*
+      example: 
+      {
+        peerId: "ufrgb3fg",
+        displayName: "yachen",
+        roles: [ 'normal', 'super_moderator' ] 
+      }
+    */
+    console.log("Personal data: ", { peerId, displayName, roles })
+  })
+  .on('addtrack', ({ track, displayName, peerId, source }) => {
+    /*
+      {
+        track: MediaStreamTrack, 
+        displayName: string,
+        peerId: string,
+        source: string
+      }
+    */
+  })
+  .on('removetrack', ({ track, displayName, peerId, source }) => {
+    /*
+      {
+        track: MediaStreamTrack, 
+        displayName: string,
+        peerId: string,
+        source: string
+      }
+    */
   })
   .on('newPeer', ({ peerId, displayName, picture, roles }) => {
+    /* 這裡的 picture 目前先不用管它 */
     console.log("Joined peer:", { peerId, displayName, picture, roles });
     // ...
   })
+  .on('activeSpeaker', ({ peerId, volume, numOfPeers }) => {
+    /* volume 都是負數，負數的數字越小代表越大聲 */
+    console.log("active Speaker:", { peerId, volume, numOfPeers });
+    // ...
+  })
+  .on('producerScore', ({ source, score }) => {
+    console.log('Producer score:', { source, score })
+  })
+  .on('consumerScore', ({ peerId, source, score }) => {
+    console.log('Consumer score:', { peerId, source, score })
+  })
   .on('peerClosed', ({ closedPeerId }) => {
     console.log("Closed peer", closedPeerId);
-    removeAllMediaElementsFromThePeer(closedPeerId);
+  })
+  .on('listAllDevices', ({ webcamDevices, audioInputDevices, audioOutputDevices }) => {
+    /*
+      {
+        webcamDevices: MediaDeviceInfo, 
+        audioInputDevices: MediaDeviceInfo,
+        audioOutputDevices: MediaDeviceInfo,
+      }
+    */
+    console.log('All Devices:', { webcamDevices, audioInputDevices, audioOutputDevices })
+  })
+  .on('updateDevices', ({ webcamDevices, audioInputDevices, audioOutputDevices }) => {
+    /*
+      {
+        webcamDevices: MediaDeviceInfo, 
+        audioInputDevices: MediaDeviceInfo,
+        audioOutputDevices: MediaDeviceInfo,
+      }
+    */
+    console.log('Updated devices:', { webcamDevices, audioInputDevices, audioOutputDevices })
+  })
+  .on('resolutionChange', ({ increase }) => {
+    /*
+      The type of increase is boolean:
+        true: increase resolution,
+        false: decrease resolution
+    */
+  })
+  .on('numOfPeers:gt', ({ numOfPeers }) => {
+    console.log(`num of peers are > ${numOfPeers}`)
+  })
+  .on('numOfPeers:lte', ({ numOfPeers }) => {
+    console.log(`num of peers are ≤ ${numOfPeers}`)
+  })
+  .on('micTrackended' () => {
+    
+  })
+  .on('permissionError', ({ event, yourRoles, permittedRoles }) => {
+    /*
+    ex: 
+      {
+        "event": "lockRoom",
+        "yourRoles": [
+            "normal"
+        ],
+        "permittedRoles": [
+            "super_moderator",
+            "co_moderator"
+        ]
+      }
+    */
+  })
+  .on("superModerator:setRoomDefaultMute", ({ mute }) => {
+    /* mute 為 boolean 值，true 為靜音 ; false 為取消靜音 */
+  })
+  .on("superModerator:promotePeerError", ({ event, expectedPeerRole, actualPeerRole }) => {
+    /*
+      當 promote 的 peer 的 role 不是 normal 時
+      ex:
+      {
+          "event": "superModerator:promotePeer",
+          "expectedPeerRole": [
+              "normal"
+          ],
+          "actualPeerRole": [
+              "normal",
+              "co_moderator"
+          ]
+      }
+    */
+
+  })
+  .on("superModerator:demotePeerError", ({ event, expectedPeerRole, actualPeerRole }) => {
+    /*
+      當 demote 的 peer 的 role 不是 co_moderator 時
+      ex:
+      {
+          "event": "superModerator:demotePeer",
+          "expectedPeerRole": [
+              "co_moderator"
+          ],
+          "actualPeerRole": [
+              "normal"
+          ]
+      }
+    */
+  })
+  .on("moderator:mute", () => {
+    /* <p.s.> 這個 event 的功能只是提醒前端，前端要自己 pauseMic() */
+  })
+  .on("moderator:unmute", () => {
+    /* <p.s.> 這個 event 的功能只是提醒前端，前端要自己 resumeMic() */
+  })
+  .on("moderator:lowerHand", () => {
+    /* <p.s.> 實際上 lowerHand 已經在 sdk 完成，這個 event 的功能只是提醒前端改 lowerHand 的 UI 而已 */
+  })
+  .on("moderator:kickPeer", () => {
+    /* 這個 event 也只是提醒前端而已，前端收到後再自己 leaveRoom() */
+  })
+  .on("gotRole", ({ role }) => {
+    /* 偵測 "自己" 得到 role */
+  })
+  .on("lostRole", ({ role }) => {
+    /* 偵測 "自己" 失去 role */
+  })
+  .on("peerGotRole", ({ peerId, role }) => {
+    /* 偵測 "其他 peer" 得到 role */
+  })
+  .on("peerLostRole", ({ peerId, role }) => {
+    /* 偵測 "其他 peer" 失去 role */
+  })
+  .on("superModerator:setRoomDefaultCanShareScreen", ({ canShareScreen }) => {
+    /* canShareScreen 為 boolean 值，true 為可以分享螢幕 ; false 為不能分享螢幕 */
+  })
+  .on("moderator:stopScreenSharing", () => {
+    /* <p.s.> 這個 event 的功能只是提醒前端，前端再自己 closeSharedScreen() */
+  })
+  .on("superModerator:setRoomDefaultCanUnmute", ({ canUnmute }) => {
+    /* canUnmute 為 boolean 值，true 為可以取消靜音或者 produce mic ; false 為不能取消靜音或者 produce mic */
+  })
+  .on("superModerator:closeMeeting", () => {
+    /* <p.s.> 這個 event 的功能只是提醒前端，前端再自己 leaveRoom() */
+  })
+  .on("moderatorMutedPeers", ({ moderatorMutedPeers }) => {
+    /* moderatorMutedPeers 為一個 peerId 的 array */
   })
 ```
 
@@ -325,3 +601,94 @@ conference
   ```javascript
     conference.leaveRoom();
   ```
+
+- moderator events:
+  - mutePeer / unmutePeer
+
+    ```javascript
+      await conference.mutePeer(peerId)
+      await conference.unmutePeer(peerId)
+    ```
+
+  - muteAllPeers / unmuteAllPeers
+
+    ```javascript
+      await conference.muteAllPeers()
+      await conference.unmuteAllPeers()
+    ```
+
+  - lowerHand
+
+    ```javascript
+      await conference.lowerHand(peerId)
+    ```
+
+  - lowerHandAll
+
+    ```javascript
+      await conference.lowerHandAll()
+    ```
+  
+  - kickPeer
+
+    ```javascript
+      await conference.kickPeer(peerId)
+    ```
+  
+  - promotePeerToCoModerator / demotePeerToNormal
+
+    ```javascript
+      await conference.promotePeerToCoModerator(peerId)
+      await conference.demotePeerToNormal(peerId)
+    ```
+
+  - setRoomDefaultMute
+
+    ```javascript
+      // 靜音
+      await conference.setRoomDefaultMute(true)
+      // 取消靜音
+      await conference.setRoomDefaultMute(false)
+    ```
+  
+  - transferSuperModerator
+
+    ```javascript
+      await conference.transferSuperModerator(peerId)
+    ```
+
+  - closeMeeting
+
+    ```javascript
+      await conference.closeMeeting();
+    ```
+  
+  - setRoomDefaultCanShareScreen
+
+    ```javascript
+      // 不能分享螢幕
+      await conference.setRoomDefaultCanShareScreen(false)
+      // 可以分享螢幕
+      await conference.setRoomDefaultCanShareScreen(true)
+    ```
+
+  - closePeerScreenSharing
+
+    ```javascript
+      await conference.closePeerScreenSharing(peerId)
+    ```
+
+  - closeAllScreenSharing
+
+    ```javascript
+      await conference.closeAllScreenSharing()
+    ```
+
+  - setRoomDefaultCanUnmute
+
+    ```javascript
+      // 不能 unmute 或者 produce mic
+      await conference.setRoomDefaultCanUnmute(false)
+      // 可以 unmute 或者 produce mic
+      await conference.setRoomDefaultCanUnmute(true)
+    ```

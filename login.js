@@ -1,16 +1,14 @@
-const inputUsername = document.querySelector('#username');
-const inputPassword = document.querySelector('#password');
-const btnLogin = document.querySelector('#login');
+const $ = document.querySelector.bind(document);
 
 main();
 
 function main(){
-  btnLogin.addEventListener('click', () => {
+  $('#btn-login').addEventListener('click', () => {
   
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     
-    const raw = JSON.stringify({"username": inputUsername.value, "password": inputPassword.value});
+    const raw = JSON.stringify({"username": $('#input-username').value, "password": $('#input-password').value});
     
     const requestOptions = {
       method: 'POST',

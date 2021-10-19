@@ -48,10 +48,9 @@
   padding: -20px 0 0 -20px;
   position: absolute;
   top: 40%;
-  width: 100px;
-  z-index: 10; 
+  width: 60px;
+  z-index: 1; 
   cursor: pointer;
-  font-size: 10px;
 }
 
 .container>.remote-video-buttons{
@@ -60,10 +59,9 @@
   padding: -20px 0 0 -20px;
   position: absolute;
   top: 60%;
-  width: 100px;
-  z-index: 10; 
+  width: 60px;
+  z-index: 1; 
   cursor: pointer;
-  font-size: 10px;
 }
 
 .hide {

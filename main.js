@@ -3,20 +3,7 @@ const {
   Conference
 } = meshConference
 const peerId = Math.random().toString(36).substr(2, 8);
-const videoLocal = document.querySelector('#video-local')
-const audioLocal = document.querySelector('#audio-local')
-const videoArea = document.querySelector('#videos');
-const inputRoomId = document.querySelector('#roomId');
-const inputDisplayName = document.querySelector('#displayName');
-const btnStartConference = document.querySelector('#startConference');
-const btnLeaveConference = document.querySelector('#leaveConference');
-const btnShareScreenSwitch = document.querySelector('#shareScreenSwitch');
-const btnWebcamSwitch = document.querySelector('#webcamSwitch');
-const btnMicSwitch = document.querySelector('#micSwitch');
-const screenShareLocal = document.querySelector('#screen-share-local');
-const localDisplayName = document.querySelector('#local-displayName');
-const selectResolutionList = document.querySelector('#resolutionList');
-const selectFramerateList = document.querySelector('#framerateList');
+const $ = document.querySelector.bind(document);
 
 let conference;
 
@@ -74,141 +61,238 @@ async function main(){
 
 
 async function startConference(meshDevice, jwtToken){
-  btnStartConference.addEventListener('click', async function() {
-    if(inputRoomId.value === '' || inputDisplayName.value === ''){
-      alert('All inputs should not be empty!');
-    }else{
-      localDisplayName.textContent = inputDisplayName.value
-      btnStartConference.disabled = true;
-      btnLeaveConference.disabled = false;
-      btnShareScreenSwitch.disabled = false;
-      btnMicSwitch.disabled = false;
-      btnWebcamSwitch.disabled = false;
+  $('#btn-createAndJoinRoom').addEventListener('click', async function() {
+    createOrJoinRoom(meshDevice, jwtToken, true)
+  })
 
-      const serverUrl = await getConferenceServer(jwtToken);
-      if(!serverUrl){
-        console.log("No serverUrl belongs to you!!");
-        return;
-      }
-      conference = new Conference(
-        meshDevice,
-        serverUrl,
-        peerId,
-        inputRoomId.value,
-        jwtToken,
-        inputDisplayName.value
-      );
-
-      conference
-        .on('unauthorized', reason => {
-          console.log("Unauthoized:", reason);
-        })
-        .on('addtrack', ({track, displayName, peerId, source}) => {
-          addRemoteMedia(track, displayName, peerId, source);
-        })
-        .on('removetrack', ({track, displayName, peerId, source}) => {
-          removeRemoteMedia(track, peerId, source);
-        })
-        .on('newPeer', ({ peerId, displayName, picture, roles }) => {
-          console.log("Joined peer:", { peerId, displayName, picture, roles });
-        })
-        .on('peerClosed', ({ closedPeerId }) => {
-          console.log("Closed peer", closedPeerId);
-          removeAllMediaElementsFromThePeer(closedPeerId);
-        })
-
-
-      const accessCapabilities = await conference.loadRouterRtpCapabilities();
-      if(!accessCapabilities){
-        console.log("Your device cannot support WebRTC.");
-        return;
-      }
-
-      await conference.handleTransport(true);
-      
-      const joinInfo = await conference.join();
-      console.log(joinInfo);
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          frameRate: { max: selectFramerateList.value }
-        },
-        audio: true 
-      });
-      const webcamTrack = stream.getVideoTracks()[0];
-      const audioTrack = stream.getAudioTracks()[0];
-      if(webcamTrack){
-        const stream = new MediaStream();
-        stream.addTrack(webcamTrack);
-        videoLocal.srcObject = stream;
-        selectResolutionList.classList.remove('hide');
-        selectFramerateList.classList.remove('hide');
-        changeResolutionListener()
-        changeFramerateListener()
-      }
-      
-      if(audioTrack){
-        const stream = new MediaStream();
-        stream.addTrack(audioTrack);
-        audioLocal.srcObject = stream;
-      }
-
-      await conference.produce(audioTrack, {
-        source: 'mic'
-      });
-      await conference.produce(webcamTrack, {
-        source: 'webcam'
-      });
-      
-      shareScreenListerner();
-      micListener();
-      webcamListener();
-    }
+  $('#btn-joinRoom').addEventListener('click', async function() {
+    createOrJoinRoom(meshDevice, jwtToken, false)
   })
 }
 
+
+async function createOrJoinRoom(meshDevice, jwtToken, create){
+  if($('#input-roomId').value === '' || $('#input-displayName').value === ''){
+    alert('All inputs should not be empty!');
+  }else{
+    $('#local-displayName').textContent = $('#input-displayName').value
+    $('#btn-createAndJoinRoom').disabled = true;
+    $('#btn-joinRoom').disabled = true;
+    $('#btn-leaveConference').disabled = false;
+    $('#btn-shareScreenSwitch').disabled = false;
+    $('#btn-micSwitch').disabled = false;
+    $('#btn-webcamSwitch').disabled = false;
+
+    const serverUrl = await getConferenceServer(jwtToken);
+    if(!serverUrl){
+      console.log("No serverUrl belongs to you!!");
+      return;
+    }
+
+    conference = new Conference(
+      meshDevice,
+      serverUrl,
+      peerId,
+      $('#input-roomId').value,
+      jwtToken,
+      $('#input-displayName').value,
+      create
+    );
+
+    conference
+      .on('unauthorized', reason => {
+        console.log("Unauthoized:", reason);
+        alert("Unauthoized:", reason);
+      })
+      .on('noDecision', err => {
+        /* 當 conference object 帶入的 create 不是 boolean 時 */
+        alert(err.message);
+      })
+      .on('create:duplicatedRoom', err => {
+        /* 當選擇 create room，但 roomId 已經被使用過 */
+        alert(err.message);
+      })
+      .on('join:roomNotExist', err => {
+        /* 當選擇 join room，但 room 並不存在 */
+        alert(err.message);
+      })
+      .on('roomReady', async () => {
+        console.log("Room is ready. Start conference");
+        const accessCapabilities = await conference.loadRouterRtpCapabilities();
+        if(!accessCapabilities){
+          console.log("Your device cannot support WebRTC.");
+          return;
+        }
+  
+        await conference.handleTransport(true);
+        
+        const joinInfo = await conference.join();
+        console.log(joinInfo);
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            frameRate: { max: $('#select-framerateList').value }
+          },
+          audio: true 
+        });
+        const webcamTrack = stream.getVideoTracks()[0];
+        const audioTrack = stream.getAudioTracks()[0];
+        if(webcamTrack){
+          const stream = new MediaStream();
+          stream.addTrack(webcamTrack);
+          $('#video-local').srcObject = stream;
+          $('#select-resolutionList').classList.remove('hide');
+          $('#select-framerateList').classList.remove('hide');
+          changeResolutionListener()
+          changeFramerateListener()
+        }
+        
+        if(audioTrack){
+          const stream = new MediaStream();
+          stream.addTrack(audioTrack);
+          $('#audio-local').srcObject = stream;
+        }
+  
+        await conference.produce(audioTrack, {
+          source: 'mic'
+        });
+        await conference.produce(webcamTrack, {
+          source: 'webcam'
+        });
+        
+        shareScreenListerner();
+        micListener();
+        webcamListener();
+        changeDeviceListener();
+      })
+      .on('personalData', ({ peerId, displayName, roles }) => {
+        console.log("Personal data: ", { peerId, displayName, roles })
+      })
+      .on('addtrack', ({track, displayName, peerId, source}) => {
+        addRemoteMedia(track, displayName, peerId, source);
+      })
+      .on('removetrack', ({track, displayName, peerId, source}) => {
+        removeRemoteMedia(track, peerId, source);
+      })
+      .on('newPeer', ({ peerId, displayName, picture, roles }) => {
+        console.log("Joined peer:", { peerId, displayName, picture, roles });
+      })
+      .on('activeSpeaker', ({ peerId, volume, numOfPeers }) => {
+        // console.log("active Speaker:", { peerId, volume });
+      })
+      .on('producerScore', ({ source, score }) => {
+        console.log('Producer score:', { source, score })
+      })
+      .on('consumerScore', ({ peerId, source, score }) => {
+        console.log('Consumer score:', { peerId, source, score })
+      })
+      .on('peerClosed', ({ closedPeerId }) => {
+        console.log("Closed peer", closedPeerId);
+        removeAllMediaElementsFromThePeer(closedPeerId);
+      })
+      .on('listAllDevices', ({ webcamDevices, audioInputDevices, audioOutputDevices }) => {
+        console.log('All Devices:', { webcamDevices, audioInputDevices, audioOutputDevices})
+        Object.keys(webcamDevices).forEach(key => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.text = webcamDevices[key].label;
+          $('#select-webcamDevices').add(option);
+        })
+
+        Object.keys(audioInputDevices).forEach(key => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.text = audioInputDevices[key].label;
+          $('#select-audioInputDevices').add(option);
+        })
+
+        Object.keys(audioOutputDevices).forEach(key => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.text = audioOutputDevices[key].label;
+          $('#select-audioOutputDevices').add(option);
+        })
+
+      })
+      .on('updateDevices', ({ webcamDevices, audioInputDevices, audioOutputDevices }) => {
+        console.log('Updated devices:', { webcamDevices, audioInputDevices, audioOutputDevices})
+        $('#select-webcamDevices').innerHTML = null;
+        $('#select-audioOutputDevices').innerHTML = null;
+        $('#select-audioInputDevices').innerHTML = null;
+        Object.keys(webcamDevices).forEach(key => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.text = webcamDevices[key].label;
+          $('#select-webcamDevices').add(option);
+        })
+
+        Object.keys(audioInputDevices).forEach(key => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.text = audioInputDevices[key].label;
+          $('#select-audioInputDevices').add(option);
+        })
+
+        Object.keys(audioOutputDevices).forEach(key => {
+          const option = document.createElement("option");
+          option.value = key;
+          option.text = audioOutputDevices[key].label;
+          $('#select-audioOutputDevices').add(option);
+        })
+      })
+      .on('numOfPeers:gt', ({ numOfPeers }) => {
+        console.log(`num of peers are > ${numOfPeers}`)
+      })
+      .on('numOfPeers:lte', ({ numOfPeers }) => {
+        console.log(`num of peers are ≤ ${numOfPeers}`)
+      })
+      .on('micTrackended', () => {
+        
+      });
+  }
+}
+
 function leaveConferenceListener(){
-  btnLeaveConference.addEventListener('click', function() {
+  $('#btn-leaveConference').addEventListener('click', function() {
     conference.leaveRoom();
     window.location.reload();
   })
 }
 
 function changeResolutionListener(){
-  selectResolutionList.onchange = async function () {
-    const resolution = selectResolutionList.value;
-    const videoTrack = videoLocal.srcObject.getVideoTracks()[0];
+  $('#select-resolutionList').onchange = async function () {
+    const resolution = $('#select-resolutionList').value;
+    const videoTrack = $('#video-local').srcObject.getVideoTracks()[0];
     await videoTrack.applyConstraints(VIDEO_CONSTRAINS[resolution]);
     console.log(videoTrack);
     const stream = new MediaStream();
     stream.addTrack(videoTrack);
-    videoLocal.srcObject = stream;
+    $('#video-local').srcObject = stream;
   }
 
-  selectResolutionList.onchange();
+  $('#select-resolutionList').onchange();
 }
 
 function changeFramerateListener(){
-  selectFramerateList.onchange = async function () {
-    const framerate = selectFramerateList.value;
-    const videoTrack = videoLocal.srcObject.getVideoTracks()[0];
+  $('#select-framerateList').onchange = async function () {
+    const framerate = $('#select-framerateList').value;
+    const videoTrack = $('#video-local').srcObject.getVideoTracks()[0];
     await videoTrack.applyConstraints({frameRate: { max: framerate }});
     console.log(videoTrack);
     const stream = new MediaStream();
     stream.addTrack(videoTrack);
-    videoLocal.srcObject = stream;
+    $('#video-local').srcObject = stream;
   }
 
-  selectFramerateList.onchange();
+  $('#select-framerateList').onchange();
 }
 
 function shareScreenListerner(){
-  btnShareScreenSwitch.addEventListener('click', async function() {
-    if(btnShareScreenSwitch.classList.contains('on')){
-      screenShareLocal.srcObject = null;
+  $('#btn-shareScreenSwitch').addEventListener('click', async function() {
+    if($('#btn-shareScreenSwitch').classList.contains('on')){
+      $('#screen-share-local').srcObject = null;
       await conference.closeSharedScreen();
-      btnShareScreenSwitch.innerHTML = 'start screen share';
-      btnShareScreenSwitch.classList.remove('on');
+      $('#btn-shareScreenSwitch').classList.remove('on');
       return;
     }
 
@@ -224,104 +308,136 @@ function shareScreenListerner(){
     if(captureStream){
       const captureStreamTrack = captureStream.getVideoTracks()[0];
       captureStreamTrack.onended = async () => {
-        screenShareLocal.srcObject = null;
+        $('#screen-share-local').srcObject = null;
         await conference.closeSharedScreen();
-        btnShareScreenSwitch.classList.remove('on');
-        btnShareScreenSwitch.innerText = 'start screen share';
-
+        $('#btn-shareScreenSwitch').classList.remove('on');
         return;
       }
       const stream = new MediaStream();
       stream.addTrack(captureStreamTrack);
-      screenShareLocal.srcObject = stream;
+      $('#screen-share-local').srcObject = stream;
 
       await conference.produce(captureStreamTrack,{
         source : 'screen'
       });
 
-      btnShareScreenSwitch.classList.add('on');
-      btnShareScreenSwitch.innerText = 'stop screen share';
+      $('#btn-shareScreenSwitch').classList.add('on');
     }
 
   });
 }
 
 function micListener(){
-  btnMicSwitch.addEventListener('click', async function() {
-    if(btnMicSwitch.classList.contains('off')){
-      btnMicSwitch.classList.remove('off');
-      btnMicSwitch.innerHTML = "mute audio";
+  $('#btn-micSwitch').addEventListener('click', async function() {
+    if($('#btn-micSwitch').classList.contains('off')){
+      $('#btn-micSwitch').classList.remove('off');
       await conference.resumeMic();
       return;
     }
     
-    btnMicSwitch.classList.add('off');
-    btnMicSwitch.innerHTML = "resume audio";
-
+    $('#btn-micSwitch').classList.add('off');
     await conference.pauseMic();
   })
 }
 
 function webcamListener(){
-  btnWebcamSwitch.addEventListener('click', async function() {
-    if(btnWebcamSwitch.classList.contains('off')){
-      btnWebcamSwitch.classList.remove('off');
-      btnWebcamSwitch.innerHTML = "hide video";
+  $('#btn-webcamSwitch').addEventListener('click', async function() {
+    if($('#btn-webcamSwitch').classList.contains('off')){
+      $('#btn-webcamSwitch').classList.remove('off');
       const videoStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          frameRate: { max: selectFramerateList.value }
+          frameRate: { max: $('#select-framerateList').value }
         }
       });
       const webcamTrack = videoStream.getVideoTracks()[0];
       const stream = new MediaStream();
       stream.addTrack(webcamTrack);
-      videoLocal.srcObject = stream;
+      $('#video-local').srcObject = stream;
       await conference.produce(webcamTrack, {
         source: 'webcam'
       });
       return;
     }
 
-    btnWebcamSwitch.classList.add('off');
-    btnWebcamSwitch.innerHTML = "play video";
-
+    $('#btn-webcamSwitch').classList.add('off');
     await conference.closeWebcam();
   })
 }
 
 function registerRemoteSwitchListener(id, peerId, source){
-  const buttonTexts = {
-    'webcam':{
-      "on": "hide video",
-      "off": "play video"
-    },
-    'mic': {
-      "on": "mute audio",
-      "off": "resume audio"
-    },
-    'screen': {
-      "on": "hide screen share",
-      "off": "play screen share"
-    }
-  }
   const element = document.getElementById(id);
   element.addEventListener('click', async function(){
     if(element.classList.contains('off')){
       await conference.resumeConsumer(peerId, source);
-      element.classList.remove('off');
-      element.innerHTML = buttonTexts[source].on;
+      element.classList.remove('off');      
       return;
     }
     await conference.pauseConsumer(peerId, source);
     element.classList.add('off');
-    element.innerHTML = buttonTexts[source].off;
   });
 }
 
+function changeDeviceListener(){
+  $('#select-webcamDevices').onchange = async function () {
+    // 改變相機裝置
+    console.log("Webcam changes");
+    console.log($('#select-webcamDevices').value);
+
+    // 關掉舊的 webcam video stream
+    await conference.closeWebcam();
+
+    const newVideoStream = await navigator.mediaDevices.getUserMedia({ 
+      video: {
+        deviceId : { ideal: $('#select-webcamDevices').value },
+        frameRate: { max: $('#select-framerateList').value }
+      }
+    });
+    const webcamTrack = newVideoStream.getVideoTracks()[0];
+    const stream = new MediaStream();
+    stream.addTrack(webcamTrack);
+    $('#video-local').srcObject = stream;
+    await conference.produce(webcamTrack, {
+      source: 'webcam'
+    });
+  }
+
+  $('#select-audioOutputDevices').onchange = async function () {
+    // 改變耳機裝置
+    console.log("audio output changes");
+    console.log($('#select-audioOutputDevices').value);
+
+    // 設定所有 remote audio 的音訊都指向所選的耳機裝置
+    const remoteAudioElements = document.getElementsByClassName('remote-audio');
+    console.log(remoteAudioElements);
+    Array.from(remoteAudioElements).forEach(el => {
+      el.setSinkId($('#select-audioOutputDevices').value)
+    });
+  }
+
+  $('#select-audioInputDevices').onchange = async function () {
+    // 改變麥克風裝置
+    console.log("audio input changes");
+    console.log($('#select-audioInputDevices').value);
+    await conference.closeMic();
+
+    const newAudioStream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        deviceId : { ideal: $('#select-audioInputDevices').value }
+      }
+    });
+    const micTrack = newAudioStream.getAudioTracks()[0];
+    const stream = new MediaStream();
+    stream.addTrack(micTrack);
+    $('#audio-local').srcObject = stream;
+    await conference.produce(micTrack, {
+      source: 'mic'
+    });
+  }
+}
+
 function autoGenerateRoomIdAndDisplayName(){
-  // inputRoomId.value = randomString({ length: 8 }).toLowerCase();
-  inputRoomId.value = 'kenroom';
-  inputDisplayName.value = 'Guest';
+  $('#input-roomId').value = 'kenroom';
+  $('#input-displayName').value = 'Guest';
 }
 
 async function getConferenceServer(jwtToken){
@@ -355,7 +471,7 @@ function addRemoteMedia(track, displayName, peerId, source){
     videoContainer = document.createElement('div');
     videoContainer.classList.add('container');
     videoContainer.setAttribute("id", `container-${peerId}${source == 'screen' ? '-' + source : ''}`);
-    videoArea.appendChild(videoContainer);
+    $('#videos').appendChild(videoContainer);
   }
 
   if(track.kind === 'video'){
@@ -372,7 +488,7 @@ function addRemoteMedia(track, displayName, peerId, source){
       const videoSwitchButton = document.createElement('button');
       videoSwitchButton.classList.add('remote-video-buttons');
       videoSwitchButton.setAttribute("id", `videoSwitch-${peerId}-${source}`);
-      videoSwitchButton.innerHTML =  source === 'screen' ? 'hide screen share' : 'hide video'
+      videoSwitchButton.innerHTML = 'Video';
       videoContainer.appendChild(videoSwitchButton);
       registerRemoteSwitchListener(`videoSwitch-${peerId}-${source}`, peerId, source);
       videoRemote = document.getElementById(`video-${peerId}-${source}`);
@@ -394,7 +510,7 @@ function addRemoteMedia(track, displayName, peerId, source){
       const audioSwitchButton = document.createElement('button');
       audioSwitchButton.classList.add('remote-audio-buttons');
       audioSwitchButton.setAttribute("id", `audioSwitch-${peerId}-${source}`);
-      audioSwitchButton.innerHTML = 'hide audio'
+      audioSwitchButton.innerHTML = 'Audio';
       videoContainer.appendChild(audioSwitchButton);
       registerRemoteSwitchListener(`audioSwitch-${peerId}-${source}`, peerId, source);
       audioRemote = document.getElementById(`audio-${peerId}-${source}`);
