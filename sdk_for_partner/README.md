@@ -44,27 +44,43 @@
 
 
 # 5. Web SDK
+
 # 5.1 直接使用
-透過呼叫Web SDK API 可直接進行操作
-* Step 1: Login : 請參照 `apidoc` Auth.Login
-* Step 2: Create Project : 請參照 `apidoc` Project.Create
-* Step 3: Create Room : 請參照 `apidoc` Room.Create
-* Step 4: Get URL : 請參照 `apidoc` Room.RoomUrl.Get
-* Step 5: Open URL with Browser : 透過 Browser 以及取得的RoomUrl 開啟Meeting Room 
+* 快速上手步驟：
+  * 取得帳號
+    * 請先申請帳號，審核通過之後會回覆給您一組密碼。
+  * 從Dashboard或API建立專案
+  * 從Dashboard或API建立會議室
+  * 從活動網頁開啟會議室
+  * 身份驗證
+  * 取得使用紀錄
+
+* 透過呼叫Web SDK API 可直接進行操作
+  * Step 1: Login : 請參照 `apidoc` Auth.Login
+  * Step 2: Create Project : 請參照 `apidoc` Project.Create
+  * Step 3: Create Room : 請參照 `apidoc` Room.Create
+  * Step 4: Get URL : 請參照 `apidoc` Room.RoomUrl.Get
+  * Step 5: Open URL with Browser : 透過 Browser 以及取得的RoomUrl 開啟Meeting Room 
   
 # 5.2 以iframe嵌入
-可透過iframe 嵌入 Room.RoomUrl 取得的網址，
 
-或者是透過Room.Query Room option中的ＵＲＬ，
+將透過 Call API **Room.RoomUrl** 或 **Room.Query Room Option** 所取得的URL 嵌入iFrame，就能在你原有的Web Page中打開Meeting Room。
 
-來開啟Meeting Room
 
-# 5.3 與會員系統的整合
-  * VerifyToken , LoginUI
+# 5.3 會員系統整合
 
-    在原有的會員系統上增加VerifyToken 機制以及Login UI Page，
-    就能夠進行會員系統與Meshstream 的串接。
-  ![參數](./apidoc/user_login_meeting_room.svg)
+SDK 亦 提供與 原有會員系統串接的機制。
+
+在原有的會員系統上增加 **VerifyToken API** 以及 **Login UI  Redirect Page**，
+就能夠進行會員系統與Meshstream 的串接。
+* VerifyToken API
+  * Request 與Response 請見`apidoc`
+* Login UI  Redirect Page
+  * 透過Login 原本會員系統，產生Token後，再透過query String Redirect 至 Conference Page
+  *詳細流程請參閱下方Sequence diagram
+
+
+![參數](./apidoc/user_login_meeting_room.svg)
 
 
 # 5.4 API Documentation
@@ -76,7 +92,8 @@ Download link [Apidoc](./apidoc/index.html )
 
 
 # 6. SDK Sample
-  * [快速上手版本](./api_sample)
+
+* [Ａpi Samlpe code](./api_sample)
   僅列出主流程部分
   ```
   async function Exec (){
@@ -117,15 +134,6 @@ Download link [Apidoc](./apidoc/index.html )
   } 
 
   ```
-  * 步驟：
-    * 取得帳號
-      * 請先申請帳號，審核通過之後會回覆給您一組密碼。
-    * 從Dashboard或API建立專案
-    * 從Dashboard或API建立會議室
-    * 從活動網頁開啟會議室
-    * 身份驗證
-    * 取得使用紀錄
-
 
 # 7. Known Issues
   * 目前透過 Dashboard 會無法建立專案管理中的會議室，僅能夠過Call Ａpi 建立 
