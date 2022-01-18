@@ -10,7 +10,7 @@
 7. [Known issue](#7.KnownIssues)
 
 
-# 1. Dashboard申請帳號
+# 1.Dashboard申請帳號
   * 透過 email
     * 寄信至 : service@meshub.io
     * 必填資訊：
@@ -20,7 +20,7 @@
       * 姓名
   * change password
 
-# 2.建立會議兩種形式建立會議兩種形式
+# 2.建立會議兩種形式
 ## 2.1 立即會議（介面操作）
 ![立即會議](./asset/立即會議.png)
 ## 2.1 建立預約會議（介面操作）
