@@ -1,0 +1,24 @@
+{
+  "name": "api_sample",
+  "version": "1.0.0",
+  "description": "api sample to Meshstream API Server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/instaapp.dev/sdk_sample/api_sample.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/instaapp.dev/sdk_sample/api_sample/issues"
+  },
+  "homepage": "https://gitlab.com/instaapp.dev/sdk_sample/api_sample#readme",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "open": "^8.4.0"
+  },
+  "devDependencies": {}
+}
