@@ -5,9 +5,12 @@ console.log('Meshstream API Sample');
 
 
 let ServerUrl ="https://api.meshstream.io"
-let userAccount ="test.meshstream@gmail.com";
-let userPassword ="123456";  
-let projectId="cd46f66d-b24f-4b0a-8e34-23f805cfc9ff";
+// userAccount, userPassword, projectId 
+// 請先跟 service@meshub.io 申請帳號後取得
+let userAccount ="";
+let userPassword ="";  
+let projectId="";
+
 
 //init Room option
 function initRoomOption ()
@@ -31,9 +34,9 @@ function initRoomOption ()
   var youtubeSetting= new Object();
   youtubeSetting.pushYoutube=false;
   youtubeSetting.ytParams= {
-    publish_url: "rtmp://a.rtmp.youtube.com/live2",
-    view_url: "https://youtu.be/ADuGn9lOTqQ",
-    stream_key: "5c0e-5pey-rytu-rfj4-8asx"
+    publish_url: "",
+    view_url: "",
+    stream_key: ""
   };
   var roomOption = new Object();
   roomOption.ui = ui;
@@ -137,7 +140,7 @@ async function Exec (){
 
   // Step 2: Create Room , 須先取得Project ID
   var roomOption = initRoomOption();
-  let roomName = "Meeting Room For SDK";
+  let roomName = "Sync Up Meeting";
 
 
   //會議時間區間為 Now, Now add one hour.
@@ -151,6 +154,7 @@ async function Exec (){
   //客製化風格示範
  // roomOption.ui.logoUrl="https://meshub.io/static/media/logo.293c4ef3.webp";
  // roomOption.ui.primaryColor="#ff0000";
+
 
   
   var roomId = await CreateRoom(token,projectId,roomName,roomOption,duration)
