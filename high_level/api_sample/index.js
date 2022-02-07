@@ -7,9 +7,9 @@ console.log('Meshstream API Sample');
 let ServerUrl ="https://api.meshstream.io"
 // userAccount, userPassword, projectId 
 // 請先跟 service@meshub.io 申請帳號後取得
-let userAccount ="";
-let userPassword ="";  
-let projectId="";
+let userAccount ="allan@staging.com.tw";
+let userPassword ="KWgy2VGz";  
+let projectId="3b52e80f-d031-42fa-aae8-2c8853d8b348";
 
 
 //init Room option
@@ -164,10 +164,6 @@ async function Exec (){
 
   // Step 4: Launch Room with default Browser，實際流程為客戶端啟動，在這邊實作是為了整體流程展現。
   open(url)
-
-  // Step 5 : Launch Ｒoom with Secondary Browser，實際流程為客戶端啟動，在這邊實作是為了整體流程展現。
-  //var roomUrl = "https://conference.meshstream.io/"+roomId;
-  //open(roomUrl, {app: {name: 'safari'}});
 
 } 
 

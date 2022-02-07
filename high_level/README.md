@@ -136,4 +136,3 @@ Download link [Apidoc](./apidoc/index.html )
   ```
 
 # 7. Known Issues
-  * 目前透過 Dashboard 會無法建立專案管理中的會議室，僅能夠過Call Ａpi 建立 
