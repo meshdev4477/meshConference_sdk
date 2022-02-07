@@ -126,8 +126,10 @@ async function CreateProject(token,ProjectName,staffs,roomOption){
 
 
 async function CreateRoom(token,projectId,roomName,roomOption,duration){
-  var roomId ="";
-  const auth = {headers: {Authorization:'Bearer ' + token} }
+  var roomId ="";  
+  //header 需要加入idempotency-key ，長度需大於32
+  const auth = {headers: {Authorization:'Bearer ' + token,"idempotency-key":'MeshHubSDKTestingForSDKUserName'+userAccount} }
+
   await axios
   .post(ServerUrl+'/v2/project/rooms', 
     { projectId:projectId,
