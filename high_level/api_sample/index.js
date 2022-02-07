@@ -7,9 +7,44 @@ console.log('Meshstream API Sample');
 let ServerUrl ="https://api.meshstream.io"
 // userAccount, userPassword, projectId 
 // 請先跟 service@meshub.io 申請帳號後取得
-let userAccount ="allan@staging.com.tw";
-let userPassword ="KWgy2VGz";  
-let projectId="3b52e80f-d031-42fa-aae8-2c8853d8b348";
+let userAccount ="";
+let userPassword ="";  
+let projectId="";
+
+async function Exec (){
+
+  // Step 1: Login ,須先取得測試帳號
+  var token = await Login(userAccount,userPassword)
+
+  // Step 2: Create Room , 須先取得Project ID
+  var roomOption = initRoomOption();
+  let roomName = "Testing Room";
+
+
+  //會議時間區間為 Now, Now add one hour.
+  var duration= new Object();
+  var now =new Date();
+  duration.begin_time=now.toISOString();
+  const end_time = new Date(now);
+  end_time.setHours(end_time.getHours() + 1);
+  duration.end_time=end_time.toISOString();
+
+  //客製化風格示範
+ // roomOption.ui.logoUrl="https://meshub.io/static/media/logo.293c4ef3.webp";
+ // roomOption.ui.primaryColor="#ff0000";
+
+
+  
+  var roomId = await CreateRoom(token,projectId,roomName,roomOption,duration)
+
+  // Step 3: GetRoomUrl，實際流程為客戶端啟動，在這邊實作是為了整體流程展現。
+  var url = await GetRoomUrl(token,roomId)
+
+  // Step 4: Launch Room with default Browser，實際流程為客戶端啟動，在這邊實作是為了整體流程展現。
+  open(url)
+
+} 
+
 
 
 //init Room option
@@ -38,6 +73,10 @@ function initRoomOption ()
     view_url: "",
     stream_key: ""
   };
+  var tokenSetting= new Object();
+  tokenSetting.checkToken=true;
+  tokenSetting.urlToCheckToken= "https://api.meshstream.io/v2/verifyToken";
+  tokenSetting.loginUrl= "https://app.meshstream.io/#/getprojectroomurl/";
   var roomOption = new Object();
   roomOption.ui = ui;
   roomOption.youtubeSetting=youtubeSetting;
@@ -133,39 +172,6 @@ function dateTimeFormating (date)
 
 
 
-async function Exec (){
-
-  // Step 1: Login ,須先取得測試帳號
-  var token = await Login(userAccount,userPassword)
-
-  // Step 2: Create Room , 須先取得Project ID
-  var roomOption = initRoomOption();
-  let roomName = "Sync Up Meeting";
-
-
-  //會議時間區間為 Now, Now add one hour.
-  var duration= new Object();
-  var now =new Date();
-  duration.begin_time=now.toISOString();
-  const end_time = new Date(now);
-  end_time.setHours(end_time.getHours() + 1);
-  duration.end_time=end_time.toISOString();
-
-  //客製化風格示範
- // roomOption.ui.logoUrl="https://meshub.io/static/media/logo.293c4ef3.webp";
- // roomOption.ui.primaryColor="#ff0000";
-
-
-  
-  var roomId = await CreateRoom(token,projectId,roomName,roomOption,duration)
-
-  // Step 3: GetRoomUrl，實際流程為客戶端啟動，在這邊實作是為了整體流程展現。
-  var url = await GetRoomUrl(token,roomId)
-
-  // Step 4: Launch Room with default Browser，實際流程為客戶端啟動，在這邊實作是為了整體流程展現。
-  open(url)
-
-} 
 
 Exec()
 
