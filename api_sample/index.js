@@ -80,6 +80,7 @@ function initRoomOption ()
   var roomOption = new Object();
   roomOption.ui = ui;
   roomOption.youtubeSetting=youtubeSetting;
+  roomOption.tokenSetting=tokenSetting;
   return roomOption;
 
 }
