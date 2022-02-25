@@ -24,10 +24,10 @@ async function Exec (){
   //會議時間區間為 Now, Now add one hour.
   var duration= new Object();
   var now =new Date();
-  duration.begin_time=now.toISOString();
+  duration.start=now.toISOString();
   const end_time = new Date(now);
   end_time.setHours(end_time.getHours() + 1);
-  duration.end_time=end_time.toISOString();
+  duration.end=end_time.toISOString();
 
   //客製化風格示範
  // roomOption.ui.logoUrl="https://meshub.io/static/media/logo.293c4ef3.webp";
